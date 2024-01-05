@@ -9,6 +9,33 @@ struct processData
     int runtime;
     int priority;
 };
+void sendProcessInfo(int id, int arrival, int runtime, int priority)
+{
+    // Create a message queue key (you can use ftok or any other method)
+    key_t msgQueueKey = ftok(".", 'a');
+
+    // Create or get the message queue
+    int msgQueue = msgget(msgQueueKey, 0666 | IPC_CREAT);
+    if (msgQueue == -1)
+    {
+        perror("Error creating/opening message queue");
+        exit(EXIT_FAILURE);
+    }
+
+    // Prepare the message
+    struct processData process;
+    process.id = id;
+    process.arrival = arrival;
+    process.runtime = runtime;
+    process.priority = priority;
+
+    // Send the message
+    if (msgsnd(msgQueue, &process, sizeof(struct processData), 0) == -1)
+    {
+        perror("Error sending message");
+        exit(EXIT_FAILURE);
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -27,6 +54,7 @@ int main(int argc, char *argv[])
     char line[100];
     int numProcesses = 0;                    // To keep track of the number of processes
     struct processData *allProcesses = NULL; // Dynamic array to store all processes
+    int nextProcessIndex = 0;                // Index of the next process to consider for sending
 
     while (fgets(line, sizeof(line), pFile))
     {
@@ -95,11 +123,27 @@ int main(int argc, char *argv[])
     // 4. Use this function after creating the clock process to initialize clock
     initClk();
     // To get time use this
-    int x = getClk();
-    printf("current time is %d\n", x);
     // TODO Generation Main Loop
-    // 5. Create a data structure for processes and provide it with its parameters.
+    // 5. Create a data structure for processes and provide it with its parameters. )(Done)
     // 6. Send the information to the scheduler at the appropriate time.
+    while (nextProcessIndex < numProcesses)
+    {
+        int x = getClk();
+        printf("current time is %d\n", x);
+        // Check if the current clock value matches the arrival time of the next process
+        if (x == allProcesses[nextProcessIndex].arrival)
+        {
+            // Send process information
+            sendProcessInfo(allProcesses[nextProcessIndex].id,
+                            allProcesses[nextProcessIndex].arrival,
+                            allProcesses[nextProcessIndex].runtime,
+                            allProcesses[nextProcessIndex].priority);
+
+            nextProcessIndex++; // Move to the next process in the array
+        }
+
+        // TODO: Add any other clock-related logic or wait mechanism if needed
+    }
     // 7. Clear clock resources
     destroyClk(true);
 }
