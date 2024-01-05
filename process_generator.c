@@ -60,6 +60,37 @@ int main(int argc, char *argv[])
     // You can iterate through this array and send each process to the scheduler at the appropriate time.
 
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
+    // TODO 2: Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
+    int chosenAlgorithm;
+    int timeStep;
+    printf("Choose a scheduling algorithm:\n");
+    printf("1. Round Robin (RR)\n");
+    printf("2. Shortest Job First (SJF)\n");
+    printf("Enter the number corresponding to your choice: ");
+    scanf("%d", &chosenAlgorithm);
+
+    if (chosenAlgorithm == 1) // Round Robin
+    {
+        printf("Enter the time step for Round Robin: ");
+        scanf("%d", &timeStep);
+
+        // TODO: Handle Round Robin logic with the specified time step
+    }
+    else if (chosenAlgorithm == 2) // Shortest Job First
+    {
+        // TODO: Handle Shortest Job First logic
+    }
+    else
+    {
+        printf("Invalid choice. Exiting.\n");
+        exit(EXIT_FAILURE);
+    }
+    // Verify TODO 2 works
+    printf("Chosen Algorithm: %d\n", chosenAlgorithm);
+    if (chosenAlgorithm == 1)
+    {
+        printf("Time Step for Round Robin: %d\n", timeStep);
+    }
     // 3. Initiate and create the scheduler and clock processes.
     // 4. Use this function after creating the clock process to initialize clock
     initClk();
