@@ -2,13 +2,6 @@
 
 void clearResources(int);
 
-struct processData
-{
-    int id;
-    int arrival;
-    int runtime;
-    int priority;
-};
 void sendProcessInfo(int id, int arrival, int runtime, int priority)
 {
     // Create a message queue key (you can use ftok or any other method)
@@ -28,9 +21,29 @@ void sendProcessInfo(int id, int arrival, int runtime, int priority)
     process.arrival = arrival;
     process.runtime = runtime;
     process.priority = priority;
+    char status[] = "new";
+    strcpy(process.status, status);
 
     // Send the message
     if (msgsnd(msgQueue, &process, sizeof(struct processData), 0) == -1)
+    {
+        perror("Error sending message");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void sendSchedulerData(struct schedulerData *sch)
+{
+    int msgQueueKey = ftok(".", 'b'); // Use a different key
+    int msgQueue = msgget(msgQueueKey, 0666 | IPC_CREAT);
+    if (msgQueue == -1)
+    {
+        perror("Error creating/opening message queue");
+        exit(EXIT_FAILURE);
+    }
+
+    // Send the struct schedulerData sch to the message queue
+    if (msgsnd(msgQueue, sch, sizeof(struct schedulerData), 0) == -1)
     {
         perror("Error sending message");
         exit(EXIT_FAILURE);
@@ -96,17 +109,20 @@ int main(int argc, char *argv[])
     printf("2. Shortest Job First (SJF)\n");
     printf("Enter the number corresponding to your choice: ");
     scanf("%d", &chosenAlgorithm);
-
+    struct schedulerData sch;
+    sch.NProcesses = numProcesses;
     if (chosenAlgorithm == 1) // Round Robin
     {
         printf("Enter the time step for Round Robin: ");
         scanf("%d", &timeStep);
+        sch.AlgoType = 1;
+        sch.Tstep = timeStep;
 
         // TODO: Handle Round Robin logic with the specified time step
     }
     else if (chosenAlgorithm == 2) // Shortest Job First
     {
-        // TODO: Handle Shortest Job First logic
+        sch.AlgoType = 2;
     }
     else
     {
@@ -119,6 +135,9 @@ int main(int argc, char *argv[])
     {
         printf("Time Step for Round Robin: %d\n", timeStep);
     }
+    // send these data to the to the scheduler
+    sendSchedulerData(&sch);
+    // TODO: Send the scheduler the necessary information to initialize s
     // 3. Initiate and create the scheduler and clock processes.
     // 4. Use this function after creating the clock process to initialize clock
     initClk();

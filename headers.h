@@ -1,4 +1,4 @@
-#include <stdio.h>      //if you don't use scanf/printf change this include
+#include <stdio.h> //if you don't use scanf/printf change this include
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <string.h>
+#include <math.h>
 
 typedef short bool;
 #define true 1
@@ -17,37 +19,55 @@ typedef short bool;
 
 #define SHKEY 300
 
-
 ///==============================
-//don't mess with this variable//
-int * shmaddr;                 //
+// don't mess with this variable//
+int *shmaddr; //
 //===============================
 
+struct processData
+{
+    int id;
+    int arrival;
+    double runtime;
+    int enteredReady;
+    int priority;
+    char status[50];
+    int waiting_time;
+    int remaining_time;
+    int excution_time;
+    int termination_time;
+    double TRT;
+    double WTRT;
+};
 
+struct schedulerData
+{
+    int AlgoType;
+    int NProcesses;
+    int Tstep;
+};
 
 int getClk()
 {
     return *shmaddr;
 }
 
-
 /*
  * All process call this function at the beginning to establish communication between them and the clock module.
  * Again, remember that the clock is only emulation!
-*/
+ */
 void initClk()
 {
     int shmid = shmget(SHKEY, 4, 0444);
     while ((int)shmid == -1)
     {
-        //Make sure that the clock exists
+        // Make sure that the clock exists
         printf("Wait! The clock not initialized yet!\n");
         sleep(1);
         shmid = shmget(SHKEY, 4, 0444);
     }
-    shmaddr = (int *) shmat(shmid, (void *)0, 0);
+    shmaddr = (int *)shmat(shmid, (void *)0, 0);
 }
-
 
 /*
  * All process call this function at the end to release the communication
@@ -55,7 +75,7 @@ void initClk()
  * Again, Remember that the clock is only emulation!
  * Input: terminateAll: a flag to indicate whether that this is the end of simulation.
  *                      It terminates the whole system and releases resources.
-*/
+ */
 
 void destroyClk(bool terminateAll)
 {
